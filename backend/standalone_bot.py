@@ -11,10 +11,14 @@ from datetime import datetime, timezone
 from ta.momentum import StochRSIIndicator
 
 # ================= CONFIG =================
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 EXCHANGE = ccxt.binance()  # Changed from Kraken to Binance
 SYMBOLS = ["BTC/USDT", "ETH/USDT", "BNB/USDT", "SOL/USDT", "XRP/USDT"]
-BOT_TOKEN = "8476137393:AAHhucpRd6FpNMRI7uGk91VT4qH0y6RuqGM"
-CHAT_ID = "-1003041148810"
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
 ATR_PERIOD = 14
 EMA_PERIODS = [20, 50, 100, 200]

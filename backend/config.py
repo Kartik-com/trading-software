@@ -60,8 +60,8 @@ SWING_LOOKBACK = 3  # Matches user provided script (was 5)
 LIQUIDITY_TOLERANCE = 0.001  # 0.1% tolerance for equal highs/lows
 
 # Telegram Configuration (Updated from User Script)
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8476137393:AAHhucpRd6FpNMRI7uGk91VT4qH0y6RuqGM")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "-1003041148810")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 # TELEGRAM_ENABLED = bool(TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)
 TELEGRAM_ENABLED = False # Paused by user request
 
