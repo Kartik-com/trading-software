@@ -137,13 +137,18 @@ app = FastAPI(
 )
 
 # Configure CORS
-# In production, we allow all for initial setup, then restrict to your Vercel URL
+# In production, we allow the specific Vercel origin and all for setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://trading-software-lemon.vercel.app",
+        "*"
+    ],
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["Content-Type", "Authorization", "Accept", "X-Requested-With"],
+    expose_headers=["*"],
 )
 
 
