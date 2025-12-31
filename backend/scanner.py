@@ -63,17 +63,8 @@ class MarketScanner:
     def _save_history(self):
         """Saves current signal history to a JSON file."""
         try:
-            # We use Signal.dict() which handles Pydantic serialization
-            # but we need to ensure datetime is ISO formatted
-            data = []
-            for sig in self.signal_history:
-                sig_data = sig.dict()
-                # Pydantic dict() might keep datetime objects, 
-                # but Signal class Config specifies isoformat for json.
-                # However, json.dump needs strings.
-                if isinstance(sig_data['candle_close_time'], datetime):
-                    sig_data['candle_close_time'] = sig_data['candle_close_time'].isoformat()
-                data.append(sig_data)
+            # Pydantic v2: model_dump(mode='json') correctly serializes datetimes to ISO strings
+            data = [sig.model_dump(mode='json') for sig in self.signal_history]
                 
             with open(self.history_file, 'w') as f:
                 json.dump(data, f, indent=4)
