@@ -394,6 +394,23 @@ class MarketScanner:
         
         return signals
     
+    def should_send_alert(self, signal: Signal) -> bool:
+        """
+        Check if an alert should be sent for this signal.
+        Implements deduplication logic.
+        """
+        key = f"{signal.symbol}_{signal.signal_type}_{signal.timeframe}"
+        now = datetime.utcnow()
+        
+        if key in self.last_alert_times:
+            elapsed = (now - self.last_alert_times[key]).total_seconds()
+            if elapsed < config.ALERT_COOLDOWN_SECONDS:
+                logger.debug(f"Alert cooldown active for {key} ({int(elapsed)}s < {config.ALERT_COOLDOWN_SECONDS}s)")
+                return False
+        
+        self.last_alert_times[key] = now
+        return True
+
     async def get_current_bias(self, symbol: str) -> Optional[MarketBias]:
         """
         Get current market bias using Simple User Logic (Close vs EMA 200).

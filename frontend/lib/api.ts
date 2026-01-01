@@ -120,22 +120,31 @@ export const api = {
 };
 
 // WebSocket Manager
+export enum ConnectionStatus {
+    CONNECTING = 'CONNECTING',
+    CONNECTED = 'CONNECTED',
+    DISCONNECTED = 'DISCONNECTED',
+    ERROR = 'ERROR'
+}
+
 export class SignalWebSocket {
     private ws: WebSocket | null = null;
     private reconnectAttempts = 0;
-    private maxReconnectAttempts = 5;
-    private reconnectDelay = 3000;
+    private maxReconnectAttempts = 20; // Increased for Render wake-up
+    private reconnectDelay = 5000;      // 5 seconds
     private onSignalCallback?: (signal: Signal) => void;
+    private onStatusCallback?: (status: ConnectionStatus) => void;
 
     constructor() {
         this.connect();
     }
 
     private connect() {
-        // Use window.location.hostname to determine if we act as localhost or not
-        // But here we rely on API_BASE_URL which is mostly sufficient
         // Replace http/https with ws/wss
         const wsUrl = API_BASE_URL.replace(/^http/, 'ws') + '/ws/signals';
+        console.log(`Connecting to WebSocket: ${wsUrl}`);
+
+        this.updateStatus(ConnectionStatus.CONNECTING);
 
         try {
             this.ws = new WebSocket(wsUrl);
@@ -143,6 +152,10 @@ export class SignalWebSocket {
             this.ws.onopen = () => {
                 console.log('WebSocket connected');
                 this.reconnectAttempts = 0;
+                this.updateStatus(ConnectionStatus.CONNECTED);
+
+                // If the backend was sleeping, it might take a while to send signals.
+                // We'll rely on the manual refresh/initial fetch in the component too.
             };
 
             this.ws.onmessage = (event) => {
@@ -162,14 +175,20 @@ export class SignalWebSocket {
 
             this.ws.onerror = (error) => {
                 console.error('WebSocket error:', error);
+                this.updateStatus(ConnectionStatus.ERROR);
             };
 
-            this.ws.onclose = () => {
-                console.log('WebSocket disconnected');
-                this.attemptReconnect();
+            this.ws.onclose = (event) => {
+                console.log(`WebSocket disconnected: Code ${event.code}, Reason: ${event.reason}`);
+
+                if (event.code !== 1000) {
+                    this.updateStatus(ConnectionStatus.DISCONNECTED);
+                    this.attemptReconnect();
+                }
             };
         } catch (error) {
             console.error('Error creating WebSocket:', error);
+            this.updateStatus(ConnectionStatus.ERROR);
             this.attemptReconnect();
         }
     }
@@ -177,8 +196,17 @@ export class SignalWebSocket {
     private attemptReconnect() {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
-            console.log(`Reconnecting... (attempt ${this.reconnectAttempts})`);
+            console.log(`Reconnecting... (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
             setTimeout(() => this.connect(), this.reconnectDelay);
+        } else {
+            console.error('Max reconnect attempts reached. Please refresh the page.');
+            this.updateStatus(ConnectionStatus.DISCONNECTED);
+        }
+    }
+
+    private updateStatus(status: ConnectionStatus) {
+        if (this.onStatusCallback) {
+            this.onStatusCallback(status);
         }
     }
 
@@ -186,9 +214,13 @@ export class SignalWebSocket {
         this.onSignalCallback = callback;
     }
 
+    onStatusChange(callback: (status: ConnectionStatus) => void) {
+        this.onStatusCallback = callback;
+    }
+
     disconnect() {
         if (this.ws) {
-            this.ws.close();
+            this.ws.close(1000, "User disconnected");
             this.ws = null;
         }
     }

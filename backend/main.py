@@ -110,10 +110,12 @@ async def lifespan(app: FastAPI):
         
     # Run INITIAL SCAN immediately for the last closed candle
     # This ensures the user sees state immediately without waiting 15 mins
-    logger.info("Running initial startup scan...")
+    logger.info("Running initial startup scan in 2 seconds...")
+    await asyncio.sleep(2)
     try:
         await scanner.scan_all_symbols(config.ENTRY_TIMEFRAME)
         await scanner.scan_all_symbols(config.BIAS_TIMEFRAME)
+        logger.info("Initial startup scan completed")
     except Exception as e:
         logger.error(f"Initial scan failed: {e}")
     

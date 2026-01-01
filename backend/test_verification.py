@@ -96,17 +96,16 @@ async def run_test():
     symbol = "BTC/TEST"
     print(f"Evaluating {symbol} with Mock Data...")
     
+    # Run evaluation
+    symbol = "BTC/TEST"
+    print(f"Evaluating {symbol} with Mock Data...")
+    
     # DEBUG: Check SMC directly
     import smc
-    import indicators
-    df_15m_ind = indicators.add_all_indicators(df_15m)
-    smc_res = smc.analyze_smc(df_15m_ind)
-    print("DEBUG SMC Structures:", smc_res['structures'])
-    print("DEBUG SMC BOS:", smc_res['bos'])
-    print("DEBUG SMC CHoCH:", smc_res['choch'])
-    print("DEBUG SMC Bias:", smc_res['structure_bias'])
+    struct = smc.detect_structure(df_15m)
+    print(f"DEBUG SMC Structure: {struct}")
     
-    signal = await scanner.evaluate_symbol(symbol)
+    signal = await scanner.evaluate_symbol(symbol, config.ENTRY_TIMEFRAME)
     
     if signal:
         print("\n✅ SIGNAL GENERATED!")
@@ -136,7 +135,7 @@ async def run_test():
         return df_15m # Still Bullish Setup
         
     scanner.fetch_ohlcv = mock_fetch_bear
-    signal_fail = await scanner.evaluate_symbol(symbol)
+    signal_fail = await scanner.evaluate_symbol(symbol, config.ENTRY_TIMEFRAME)
     
     if signal_fail is None:
         print("✅ SUCCESS: Conflicting signal correctly filtered out")
