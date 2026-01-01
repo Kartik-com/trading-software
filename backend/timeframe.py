@@ -20,7 +20,8 @@ class CandleCloseScheduler:
         self.callbacks: Dict[str, List[Callable]] = {
             "5m": [],
             "15m": [],
-            "1h": []
+            "1h": [],
+            "4h": []
         }
         self.running = False
         
@@ -29,7 +30,7 @@ class CandleCloseScheduler:
         Register a callback to be called when a candle closes.
         
         Args:
-            timeframe: Timeframe to monitor ("5m", "15m", "1h")
+            timeframe: Timeframe to monitor ("5m", "15m", "1h", "4h")
             callback: Async function to call on candle close
         """
         if timeframe in self.callbacks:
@@ -43,7 +44,7 @@ class CandleCloseScheduler:
         Calculate the next candle close time for a given timeframe.
         
         Args:
-            timeframe: Timeframe ("5m", "15m", "1h")
+            timeframe: Timeframe ("5m", "15m", "1h", "4h")
             
         Returns:
             DateTime of next candle close (UTC)
@@ -56,6 +57,8 @@ class CandleCloseScheduler:
             minutes = 15
         elif timeframe == "1h":
             minutes = 60
+        elif timeframe == "4h":
+            minutes = 240
         else:
             raise ValueError(f"Unsupported timeframe: {timeframe}")
         
@@ -68,7 +71,7 @@ class CandleCloseScheduler:
         # Calculate next close time
         next_close = now.replace(second=0, microsecond=0)
         next_close = next_close.replace(
-            hour=next_interval // 60,
+            hour=(next_interval // 60) % 24, # Handle wrap around
             minute=next_interval % 60
         )
         
@@ -97,6 +100,8 @@ class CandleCloseScheduler:
             minutes = 15
         elif timeframe == "1h":
             minutes = 60
+        elif timeframe == "4h":
+            minutes = 240
         else:
             return False
         

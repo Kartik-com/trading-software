@@ -25,9 +25,13 @@ SYMBOLS: List[str] = [
 TIMEFRAMES = {
     "15m": "15m",
     "1h": "1h",
+    "4h": "4h",
 }
 
+# Primary timeframe for major trend (4-Hour)
+TREND_TIMEFRAME = "4h"
 # Primary timeframe for bias determination (1-Hour)
+# (Used as filter for 15m entries)
 BIAS_TIMEFRAME = "1h"
 # Entry timeframe for signal generation (15-Minute)
 ENTRY_TIMEFRAME = "15m"

@@ -392,6 +392,46 @@ class MarketScanner:
                 except Exception as e:
                     logger.error(f"Error scanning {symbol} for reversals: {e}", exc_info=True)
         
+        # CASE 3: 4H Candle Close (MAJOR TREND ALERTS)
+        elif timeframe == config.TREND_TIMEFRAME:
+            for symbol in config.SYMBOLS:
+                try:
+                    df = await self.fetch_ohlcv(symbol, config.TREND_TIMEFRAME)
+                    if df is None or len(df) < 2: continue
+                    
+                    df = indicators.add_all_indicators(df)
+                    curr_candle = df.iloc[-1]
+                    
+                    # For 4H, we just report the current bias state as an alert
+                    # to keep the user updated on the major trend.
+                    curr_bias = "BULLISH" if curr_candle['close'] > curr_candle['ema_200'] else "BEARISH"
+                    
+                    signal = Signal(
+                        signal_type="REVERSAL",
+                        symbol=symbol,
+                        timeframe=config.TREND_TIMEFRAME,
+                        bias=curr_bias,
+                        structure=f"Major Trend: {curr_bias}",
+                        entry_price=float(curr_candle['close']),
+                        stop_loss=0.0,
+                        take_profit=0.0,
+                        confidence="HIGH",
+                        candle_close_time=curr_candle['timestamp'].to_pydatetime() if hasattr(curr_candle['timestamp'], 'to_pydatetime') else curr_candle['timestamp'],
+                        ema_alignment=True,
+                        rsi=float(curr_candle.get('rsi', 0)),
+                        stoch_rsi_k=float(curr_candle.get('stoch_rsi_k', 0)),
+                        stoch_rsi_d=float(curr_candle.get('stoch_rsi_d', 0)),
+                    )
+                    
+                    if self.should_send_alert(signal):
+                        signals.append(signal)
+                        self.signal_history.append(signal)
+                        self._save_history()
+                        logger.info(f"4H TREND ALERT: {symbol} is {curr_bias}")
+                        
+                except Exception as e:
+                    logger.error(f"Error scanning {symbol} for 4H trend: {e}", exc_info=True)
+
         return signals
     
     def should_send_alert(self, signal: Signal) -> bool:

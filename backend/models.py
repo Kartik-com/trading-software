@@ -98,6 +98,14 @@ class AlertMessage(BaseModel):
         sl = round(self.signal.stop_loss, 2)
         tp = round(self.signal.take_profit, 2)
         
+        # Calculate Validity Recommendation
+        if self.signal.timeframe == "15m":
+            valid_until = "Next 15m Candle or Target/SL Hit"
+        elif self.signal.timeframe == "1h":
+            valid_until = "Next 1h Candle Close"
+        else:
+            valid_until = "Next 4h Candle Close"
+
         message = (
             f"{emoji} {self.signal.signal_type} SIGNAL — {self.signal.symbol}\n"
             f"Timeframe: {self.signal.timeframe}\n"
@@ -107,6 +115,7 @@ class AlertMessage(BaseModel):
             f"Target: {tp}\n"
             f"Stop Loss: {sl}\n"
             f"Confidence: {self.signal.confidence}\n"
+            f"Valid Until: {valid_until}\n"
             f"Candle Close: {self.signal.candle_close_time.strftime('%Y-%m-%d %H:%M UTC')}"
         )
         

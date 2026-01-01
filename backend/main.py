@@ -100,6 +100,7 @@ async def lifespan(app: FastAPI):
     # Register callbacks for each timeframe
     scheduler.register_callback(config.ENTRY_TIMEFRAME, on_candle_close)
     scheduler.register_callback(config.BIAS_TIMEFRAME, on_candle_close)
+    scheduler.register_callback(config.TREND_TIMEFRAME, on_candle_close)
     
     # Start the scheduler
     scheduler_task = asyncio.create_task(scheduler.run())
